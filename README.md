@@ -8,13 +8,13 @@ Combines public crypto currency websocket API's to provide a low-resource, zero 
 
 
 ### Quickstart
-1) Require the module as per usual
 
-``` cryptoSocket = require("crypto-socket") ```
 
-2) Start sockets
+```
+cryptoSocket = require("crypto-socket")
+cryptoSocket.start();
 
-```cryptoSocket.start();```
+```
 
 3) Get ticker quotes via **cryptoSocket.echoExchange()** or access object variable **cryptoSocket.Exchanges**
 
@@ -34,7 +34,7 @@ Combines public crypto currency websocket API's to provide a low-resource, zero 
 
 ## Basic functions
 
-###```cryptoSocket.start(<exchange>,<symbol>)```
+###cryptoSocket.start(<exchange>,<symbol>)
 
 Starts a websocket. Where ***exchange*** is always lowercase and ***symbol*** is always upper-case.
 
@@ -46,12 +46,13 @@ cryptoSocket.start("bitfinex","ETHBTC")
 cryptoSocket.start("bitmex","ETHBTC")
 cryptoSocket.start("cex","ETHBTC")
 ```
+
 **Note**
 
 As of now **Poloniex** exchange only has one open socket that sends back all data. The above syntax is not recommeneded unless you are only following one symbol; as it will open up multiple sockets that return all data, and filter out your selections.
 __________
 
-###```echoExchange()```
+###echoExchange()
 
 A simple printout of all open ticker quotes.
 
@@ -64,8 +65,9 @@ setInterval(
 		cryptoSocket.echoExchange()
 	},1000);
 ```
+
 ________________
-###```cryptoSocket.Exchanges```
+###cryptoSocket.Exchanges
 
 Access to the raw variable the module uses to store ticker quotes as they update. One value at a time.
 
@@ -94,6 +96,7 @@ This module **does not include exchange API's that do not have web sockets**. Wh
 Many developers would rather not be bothered reading through additional API documentation which, in many cases, is incomplete, hard to follow and usually lacking node.js examples. I did it for you! In node. Your welcome.
 
 ###Why Should I use websockets?
+
 They are (usually) faster. Data is sent to the client as its received, versus a poll-and-diff approach which requires regular polling intervals. This can mean the difference between a constant 10k/s stream versus a sporadic 3k/s steam. Sites that poll many exchanges regularly increase bandwith use based on polling intervals. (For example if you attempt to use BTCAverage module, and three times a second, you can easily consume 300k/s) This module with all websockets activated consumes around 3-10k/s making it possible for low-bandwith enviornments to function somewhat efficently.
 
 ###Why are some symbols unavailable?
