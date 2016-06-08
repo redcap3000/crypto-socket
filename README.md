@@ -30,6 +30,7 @@ cryptoSocket.start();
 |Gemini   | *   | *    |   |
 |GDAX	 	| *	   | *		| 	|
 |Bitmex   | *   | * | | | * | *|
+|OKCoin   | *   |    | * | | |
 
 
 ## Basic functions
@@ -101,7 +102,7 @@ They are (usually) faster. Data is sent to the client as its received, versus a 
 
 ###Why are some symbols unavailable?
 
-Laziness. Hook it up with a PR brah; after a while one gets burnt out glazing over poorly written/organized API documentation; **and its all subject to change at any given moment so prepare for this to break**.
+The exchange's api does not offer the symbol via websocket or laziness. Hook it up with a PR brah; after a while one gets burnt out glazing over poorly written/organized API documentation; **and its all subject to change at any given moment so prepare for this to break**.
 
 ###Why are some exchanges unavailable?
 
