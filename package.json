@@ -1,6 +1,6 @@
 {
   "name": "crypto-socket",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Basic cryptocurrency ticker supporting multiple exchanges and currencies with websockets where available.",
   "main": "index.js",
   "scripts": {
@@ -25,8 +25,8 @@
     "autobahn": "0.10.0",
     "bufferutil": "^1.2.1",
     "faye-websocket": "0.11.0",
-    "pusher-client" : "1.1.0",
-    "utf-8-validate" : "^1.2.1"
+    "pusher-client": "1.1.0",
+    "utf-8-validate": "^1.2.1"
   },
   "author": "Ronaldo Barbachano",
   "license": "ISC",
