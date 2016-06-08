@@ -34,7 +34,7 @@ cryptoSocket.start();
 
 ## Basic functions
 
-###cryptoSocket.start(<exchange>,<symbol>)
+###cryptoSocket.start(exchange,symbol)
 
 Starts a websocket. Where ***exchange*** is always lowercase and ***symbol*** is always upper-case.
 
