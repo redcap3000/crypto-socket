@@ -84,8 +84,7 @@ var cryptoSockets = {
                 "channel": "ticker",
                 "pair": "LTCBTC"
             },
-            "ETHUSD":
-
+            "LTCUSD":
             {
                 "event": "subscribe",
                 "channel": "ticker",
