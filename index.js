@@ -390,7 +390,7 @@ var cryptoSockets = {
                         "USDT_DASH" : "DASHUSD",
                         "BTC_LSK" : "LSKBTC",
                         "USDT_ETH" : "ETHUSD",
-                        "BTC_POT" : "BTCPOT"
+                        "BTC_POT" : "POTBTC"
                     }
                     var tickerCode = (typeof codeConversion[args[0]] != "undefined" ? codeConversion[args[0]] : false);
                     
