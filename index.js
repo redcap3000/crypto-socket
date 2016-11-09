@@ -84,7 +84,7 @@ var cryptoSockets = {
                 "channel": "ticker",
                 "pair": "LTCBTC"
             },
-            "ETHUSD":
+            "LTCUSD":
 
             {
                 "event": "subscribe",
@@ -390,7 +390,8 @@ var cryptoSockets = {
                         "BTC_DASH" : "DASHBTC",
                         "USDT_DASH" : "DASHUSD",
                         "BTC_LSK" : "LSKBTC",
-                        "USDT_ETH" : "ETHUSD"
+                        "USDT_ETH" : "ETHUSD",
+                        "BTC_POT" : "BTCPOT"
                     }
                     var tickerCode = (typeof codeConversion[args[0]] != "undefined" ? codeConversion[args[0]] : false);
                     
