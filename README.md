@@ -21,17 +21,22 @@ cryptoSocket.start();
 
 ##Supported Exchanges/Symbols
 
-|Exchange | btc | eth | ltc| dash | lsk | DAO | 
-|---------|-----|-----|----|------|-----|-----|
-|Bitfinex | *   | *   |    | | | |
-|Poloniex | *   | *   |    |* | * | *|
-|Cex      | *   | *   |    |
-|Bitstamp | *   |     |    |
-|Gemini   | *   | *    |   |
-|GDAX	 	| *	   | *		| 	|
-|Bitmex   | *   | * | | | * | *|
-|OKCoin   | *   |    | * | | |
+|Exchange | btc | eth | ltc| dash | lsk | rdd| doge | xem | xmr | xlm | xrp | pot |zcash|etc|maid| bts|
+|---------|:---:|:---:|:--:|:----:|:---:|:--:|:----:|:---:|:---:|:---:|:---:|:---:|:---:|:-:|:--:|:--:|
+|Bittrex  | *   | *   |  * |    * |     |  * |  *   | *   | *   | *   |  *  |  *  |     |   |    |    |
+|Poloniex | *   | *   |  * |    * |     |    |  *   | *   | *   | *   |  *  |  *  |  *  | * |  * |  * |
+|Bitfinex | *   | *   |  * |    * |     |    |      |     | *   |     |     |     |  *  | * |    |    |
+|Cex      | *   | *   |    |      |     |    |      |     |     |     |     |     |     |   |    |    |
+|Bitstamp | *   |     |    |      |     |    |      |     |     |     |  *  |     |     |   |    |    |
+|Gemini   | *   | *   |    |      |     |    |      |     |     |     |     |     |     |   |    |    |
+|GDAX	  | *	| *	  |  * |      |     |    |      |     |     |     |     |     |     |   |    |    |
+|Bitmex   | *   |     |    |      |     |    |      |     |     |     |     |     |     |   |    |    |
+|OKCoin?  | *   |     |  * |      |     |    |      |     |     |     |     |     |     |   |    |    |
 
+
+
+-- Top exchanges have at least a BTCUSD quote, ETHUSD, LTCUSD, DASHUSD etc. Documentation coming soon.... check source for more details.
+-- okcoin seems to not be responding to websocket requests?
 
 ## Basic functions
 

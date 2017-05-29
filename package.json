@@ -1,6 +1,6 @@
 {
   "name": "crypto-socket",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Basic cryptocurrency ticker supporting multiple exchanges and currencies with websockets where available.",
   "main": "index.js",
   "scripts": {
@@ -25,6 +25,7 @@
     "autobahn": "0.10.0",
     "bufferutil": "^1.2.1",
     "faye-websocket": "0.11.0",
+    "node.bittrex.api": "^0.2.5",
     "pusher-client": "1.1.0",
     "utf-8-validate": "^1.2.1"
   },
