@@ -79,7 +79,7 @@ var cryptoSockets = {
                 'BTC-XMR',
                 'BTC-XLM',
                 'USDT-BTC',
-            ]
+            ];
         var bittrexMarketFilterRelation = 
             [   
                 'ETHBTC',
@@ -94,9 +94,10 @@ var cryptoSockets = {
                 'XMRBTC',
                 "XLMBTC",
                 "BTCUSD",
-            ]
+            ];
 
-        bittrex.options({ 'stream': true })
+        bittrex.options({ 'stream': true });
+
         bittrexMarketFilter.filter(function(o,i){
             bittrex.getticker( {market :o},function( response ) {
                 if(typeof bittrexMarketFilterRelation[i] != "undefined"){
@@ -117,7 +118,7 @@ var cryptoSockets = {
                     console.log("relation not found " + o + ' : ' + i)
                 }
             });    
-        })
+        });
     },
     'bitfinex': function(symbol) {
 
@@ -132,6 +133,8 @@ var cryptoSockets = {
             "XMRBTC",
             "DASHBTC",
             "ZECBTC",
+            "BCHBTC",
+            "BCHUSD"
 
         ].filter( function(o){
             supportedSymbols[o] = {
@@ -189,16 +192,18 @@ var cryptoSockets = {
         console.log("starting bitmex");
         // bit mex probably supports more.. but its not clear on how to access them...
         // when found they can be added here.... is LTC LTCUSD ? OR 
+        // no idea what symbols mean what.. the only one that works is 'XBTUSD'
+        // all others give 'Unkown or expired symbol.'
         var bitmexSymbol={
-                "ETHBTC" : "ETHXBT",
+                //"ETHBTC" : "ETHXBT",
                 "BTCUSD" : "XBTUSD",
-                "DOAETH" : "DAOETH",
-                "LSKBTC" : "LSKXBT",
-                "LTCUSD" : "LTCUSD"
+                //"DOAETH" : "DAOETH",
+                //"LSKBTC" : "LSKXBT",
+                //"LTCUSD" : "LTCUSD"
         };
         var query='';
         if(typeof symbols == "undefined"){
-            query='trade:ETHXBT,trade:XBTUSD,trade:DAOETH,trade:LSKXBT'
+            query='trade:XBTUSD'
             // list all
         }else{
             if(typeof bitmexSymbol[symbols] != "undefined"){
@@ -493,6 +498,8 @@ var cryptoSockets = {
                         "BTC_XEM" : "XEMBTC",
                         //"BTC_PASC" : "PASCBTC",
                         "BTC_BTS" : "BTSBTC",
+                        "BTC_BCH" : "BCHBTC",
+                        "USDT_BCH" : "BCHUSD",
                         "BTC_XRP" : "XRPBTC"
                     }
                     var tickerCode = (typeof codeConversion[args[0]] != "undefined" ? codeConversion[args[0]] : false);
