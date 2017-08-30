@@ -201,17 +201,16 @@ var cryptoSockets = {
           "XBTUSD": 'BTCUSD',
           ".LTCXBT": "LTCBTC"
         }
-        if (symbol) {
-          var key = Object.keys(symbols)
-            .find((key) => { 
-              return symbols[key] ==  symbol 
-            })
-          query = 'trade:' +  key
-        } else {
-          query = Object.keys(symbols)         
-            .map((symbol) => { return 'trade:' + symbol   })
-            .join(',')
-        }  
+        var query = Object.keys(symbols)
+          .filter((key) => { 
+            if (symbol) { 
+              return symbols[key] == symbol
+            } else { 
+              return true 
+            }
+          })
+          .map((symbol) => { return 'trade:' + symbol })
+          .join(',')
         this.makeSocket('wss://www.bitmex.com/realtime?subscribe=' + query, 'bitmex', function(event) {
             if (typeof event.data != "undefined") {
                 var data = JSON.parse(event.data);
