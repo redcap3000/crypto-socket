@@ -79,6 +79,8 @@ var cryptoSockets = {
                 'BTC-XMR',
                 'BTC-XLM',
                 'USDT-BTC',
+                'BTC-NEO',
+                'ETH-NEO'
             ];
         var bittrexMarketFilterRelation = 
             [   
@@ -94,6 +96,8 @@ var cryptoSockets = {
                 'XMRBTC',
                 "XLMBTC",
                 "BTCUSD",
+                'BTCNEO',
+                'ETHNEO'
             ];
 
         bittrex.options({ 'stream': true });
