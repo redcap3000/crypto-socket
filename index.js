@@ -194,7 +194,7 @@ var cryptoSockets = {
     },
     'bitmex': function(symbol) {
         console.log("starting bitmex");
-        // to support my bitmex symbols check out their rest API and implement symbols you see from
+        // to support more bitmex symbols check out their rest API and implement symbols you see from
         // the return of their endpoints
         var symbols = {
           ".ETHXBT": "ETHBTC",
@@ -211,10 +211,7 @@ var cryptoSockets = {
           query = Object.keys(symbols)         
             .map((symbol) => { return 'trade:' + symbol   })
             .join(',')
-
         }  
-
-          console.log(query)
         this.makeSocket('wss://www.bitmex.com/realtime?subscribe=' + query, 'bitmex', function(event) {
             if (typeof event.data != "undefined") {
                 var data = JSON.parse(event.data);
