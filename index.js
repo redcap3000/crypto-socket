@@ -192,54 +192,41 @@ var cryptoSockets = {
 
         return true;
     },
-    'bitmex': function(symbols) {
+    'bitmex': function(symbol) {
         console.log("starting bitmex");
-        // bit mex probably supports more.. but its not clear on how to access them...
-        // when found they can be added here.... is LTC LTCUSD ? OR 
-        // no idea what symbols mean what.. the only one that works is 'XBTUSD'
-        // all others give 'Unkown or expired symbol.'
-        var bitmexSymbol={
-                //"ETHBTC" : "ETHXBT",
-                "BTCUSD" : "XBTUSD",
-                //"DOAETH" : "DAOETH",
-                //"LSKBTC" : "LSKXBT",
-                //"LTCUSD" : "LTCUSD"
-        };
-        var query='';
-        if(typeof symbols == "undefined"){
-            query='trade:XBTUSD'
-            // list all
-        }else{
-            if(typeof bitmexSymbol[symbols] != "undefined"){
-                query = 'trade:' + bitmexSymbol[symbols];
-            }
+        // to support my bitmex symbols check out their rest API and implement symbols you see from
+        // the return of their endpoints
+        var symbols = {
+          ".ETHXBT": "ETHBTC",
+          "XBTUSD": 'BTCUSD',
+          ".LTCXBT": "LTCBTC"
         }
+        if (symbol) {
+          var key = Object.keys(symbols)
+            .find((key) => { 
+              return symbols[key] ==  symbol 
+            })
+          query = 'trade:' +  key
+        } else {
+          query = Object.keys(symbols)         
+            .map((symbol) => { return 'trade:' + symbol   })
+            .join(',')
+
+        }  
+
+          console.log(query)
         this.makeSocket('wss://www.bitmex.com/realtime?subscribe=' + query, 'bitmex', function(event) {
             if (typeof event.data != "undefined") {
                 var data = JSON.parse(event.data);
-                //console.log(data);
-                if (typeof data != "undefined" && typeof data.data != "undefined" && typeof data.data != "undefined") {
+                if (data && data.data) {
                     data = data.data[0];
                     if(typeof data == "undefined" || typeof data.symbol == "undefined"){
                         // some responses are blank or notification of sub.. when that happens this crashes... 
                         return false;
                     }
-                    var tickerCode = data.symbol;
-                    if (data.symbol == "XBTUSD" || data.symbol == "XBT") {
-                        tickerCode = "BTCUSD";
-                    } else if (data.symbol == "XBTDAO") {
-                        tickerCode = "DAOBTC";
-                    } else if (data.symbol == "ETHXBT") {
-                        tickerCode = "ETHBTC";
-                    } else if (data.symbol == "LSKXBT") {
-                        tickerCode = "LSKBTC";
-                    } else if (data.symbol == "LTC") {
-                        tickerCode = "LTCUSD";
-                    }
-                    var tickerValue = parseFloat(data.price);
-                    if (tickerValue != Exchanges.bitmex[tickerCode]) {
-                        Exchanges.bitmex[tickerCode] = tickerValue;
-                    }
+                    if (symbols[data.symbol]) {
+                      Exchanges.bitmex[symbols[data.symbol]] = parseFloat(data.price)
+                    } 
                 } else {
                     //console.log(event);
                     console.log(JSON.parse(event.data));
