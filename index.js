@@ -320,6 +320,7 @@ var cryptoSockets = {
         return true;
     },
     'gdax': function(symbol) {
+        var norm = (symbol) => { return symbol.replace('-', '') } 
         var query =[{
             "type": "subscribe",
             "product_id": "BTC-USD"
@@ -330,36 +331,16 @@ var cryptoSockets = {
         {
             "type" : "subscribe",
             "product_id" : "LTC-BTC"
-        }];
-        // FIX THIS SHIT
-        if(typeof symbol == "undefined"){
-            // do all !
-        }else if(typeof symbol != "undefined" && symbol == "ETHBTC"){
-            query.shift();
-        }else if(typeof symbol != "undefined" && symbol == "BTCUSD"){
-            query.pop();
-        }
+        }].filter((item) => {
+          return typeof symbol == 'undefined' || norm(item.product_id) == symbol 
+        });      
         this.makeSocket('wss://ws-feed.gdax.com/', 'gdax', function(event) {
             if (typeof event.data != "undefined") {
                 var data = JSON.parse(event.data);
-                if (data && typeof data.type != "undefined" && data.type == "match") {
-                    var tickerValue = parseFloat(data.price);
-                    if ( data.product_id == 'BTC-USD') {
-                        if(tickerValue != Exchanges.gdax["BTCUSD"]){
-
-                            Exchanges.gdax["BTCUSD"] = tickerValue;
-                        }
-                    } else if (data.product_id == 'ETH-BTC') {
-                        // this is such hack.
-
-                        if(tickerValue != Exchanges.gdax["ETHBTC"]){
-                            Exchanges.gdax["ETHBTC"] = tickerValue;
-                        }
-                    } else if (data.product_id == 'LTC-BTC'){
-                        if(tickerValue != Exchanges.gdax["LTCBTC"]){
-                            Exchanges.gdax["LTCBTC"] = tickerValue;
-                        }
-
+                if (data && typeof data.type != "undefined") {
+                    var tickerValue = parseFloat(data.price);                    
+                    if (tickerValue != Exchanges.gdax[norm(data.product_id)] )  {
+                      Exchanges.gdax[norm(data.product_id)]  = tickerValue 
                     }
                 }
             }
