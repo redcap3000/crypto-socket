@@ -110,7 +110,7 @@ var cryptoSockets = {
                 pairs.filter(function(p){
                     console.log(sym, p)
                     if(sym.endsWith(p) && symbol == ''){
-                        symbol = p + '-' + sym.split(p)[0];
+                        symbol = p + (p=='USD'?'T':'') + '-' + sym.split(p)[0];
                     }
                 })
 
