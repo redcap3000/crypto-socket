@@ -20,6 +20,37 @@ var Exchanges = {}, Sockets = {},
 BfxChannelIds = {};
 
 exports.Exchanges = Exchanges;
+/* Eventually get this information from some kind of endpoint
+    that can be requested on demand and potentially stored
+    ... somewhere ?
+    Also to note, theres no btcSym because (for now)
+    can just convert it as normal. But some symbol names
+    are different across exchanges (BCC/BCH)
+    Once this is replicated across the other exchanges
+    only this variable will need to be changed to support any market.
+*/
+
+ExchangeInfo = {
+    'bittrex': 
+        {
+            'usdSym': 
+                [
+                    'BTC', 'ETH', 'NEO',
+                    'LTC', 'BCC', 'ETC', 
+                    'ZEC', 'XMR', 'DASH'
+                ],
+            'ethSym': 
+                [
+                    'OMG', 'NEO', 'QTUM',
+                    'PAY', 'BCC', 'LTC',
+                    'SNT', 'XRP', 'CVC',
+                    'ADX', 'ETC', 'GNT',
+                    'STRAT', 'ZEC', 'BAT',
+                    'TKN', 'XMR', 'MTL',
+                    'FUN'
+                ]
+        }
+};
 
 // helper function that can simply echo the exchanges variable so its kinda like a ticker.
 exports.echoExchange = function() {
@@ -42,6 +73,8 @@ exports.start = function(exchange,symbols) {
         cryptoSockets.start(exchange,symbols);
     }
 };
+
+
 // bread and butter for 2/3 of exchanges. url is the websocket endpoint, title refers to the exchange (single word),onMessage
 // is a function that runs when the socket receives a message, send is an object that is sent to subscribe where applicable
 var supportedExchanges = [
@@ -59,70 +92,73 @@ var supportedExchanges = [
 exports.supportedExchanges = supportedExchanges;
 
 var cryptoSockets = {
-    'bittrex' : function(){
+  
+    'bittrex' : function(symbols){
         console.log("BITTREX START")
+        
+        if(typeof symbols == 'undefined'){
+            // default it
+            symbols = ['BTCUSD']
+        }
+        function convertSymbol(sym){
+            // check for used
+            var pairs = ['BTC','USDT','ETH'];
+            if(sym == 'BTCUSD'){
+                return 'USDT-BTC';
+            }else{
+                var symbol = ''
+                pairs.filter(function(p){
+                    console.log(sym, p)
+                    if(sym.endsWith(p) && symbol == ''){
+                        symbol = p + '-' + sym.split(p)[0];
+                    }
+                })
+
+            }
+            if(typeof symbol != 'undefined' && symbol != ''){
+                return symbol;
+            }else{
+                console.log("Could not convert bittrex symbol, market not found.")
+            }
+        }
         if(typeof Exchanges['bittrex'] == "undefined"){
             Exchanges['bittrex'] = {};
         }
-
-        var bittrexMarketFilter = 
-            [   
-                'BTC-ETH',
-                'BTC-RDD',
-                'BTC-XRP',
-                'BTC-POT',
-                'BTC-LTC',
-                'BTC-XEM',
-                'BTC-DASH',
-                'BTC-BTS',
-                'BTC-DOGE',
-                'BTC-XMR',
-                'BTC-XLM',
-                'USDT-BTC',
-                'BTC-NEO',
-                'ETH-NEO'
-            ];
-        var bittrexMarketFilterRelation = 
-            [   
-                'ETHBTC',
-                "RDDBTC",
-                'XRPBTC',
-                "POTBTC",
-                'LTCBTC',
-                'XEMBTC',
-                'DASHBTC',
-                'BTSBTC',
-                'DOGEBTC',
-                'XMRBTC',
-                "XLMBTC",
-                "BTCUSD",
-                'BTCNEO',
-                'ETHNEO'
-            ];
-
-        bittrex.options({ 'stream': true });
-
-        bittrexMarketFilter.filter(function(o,i){
-            bittrex.getticker( {market :o},function( response ) {
-                if(typeof bittrexMarketFilterRelation[i] != "undefined"){
-                // for the record :
-                    var relation = bittrexMarketFilterRelation[i]
-                    if(typeof Exchanges.bittrex[relation] == "undefined"){
-                        Exchanges.bittrex[relation] = true
-                    }
-
-                    if(typeof response.Last == "undefined"){
-                        return false
-                    }
-                    if (Exchanges.bittrex[relation] != response.Last) {
-                        console.log(relation, response['Last']);
-                        Exchanges.bittrex[relation] = parseFloat(response['Last']);
-                    }
-                }else{
-                    console.log("relation not found " + o + ' : ' + i)
+        if(typeof symbols != 'undefined'){
+            // check exchanges to see that quote is not 
+            // already reporting
+            // this mostly handles appropriate referen
+            var listening = [];
+            symbols.filter(function(sym){
+                if( parseInt(activeBittrexSymbols.indexOf(sym)) > -1 ){
+                //    console.log('already listening ' + sym);
+                    activeBittrexSymbols.push(sym)
                 }
-            });    
-        });
+                var relation = convertSymbol(sym);
+                //console.log( 'listen for ' + relation);
+                // not a web socket poll/diff :(
+                bittrex.getticker( {market :relation,stream:true},function( response ) {
+                    var responseObj = response.result
+                    // cant believe this crap. the only way to avoid 'null' errors
+                    // if market was invalid etc.
+                    if(typeof responseObj != 'undefined' && responseObj != null && responseObj && typeof responseObj.Last == 'number'){
+                        Exchanges.bittrex[sym] = parseFloat(responseObj.Last);
+
+                    }
+                    //}
+                });    
+                //}
+            });
+            // unlisten to variables that aren't present?
+            // to do add all open 'getTicker' sockets to another variable so they can be closed
+            /*
+            for(var key in Exchanges['bittrex']){
+                if(parseInt(listening.indexOf(key)) == -1){
+                    // unlisten to this quote somehow
+                }
+            }*/
+            return true;
+        }
     },
     'bitfinex': function(symbol) {
 

@@ -22,12 +22,12 @@
     "ticker"
   ],
   "dependencies": {
-    "autobahn": "0.10.0",
-    "bufferutil": "^1.2.1",
-    "faye-websocket": "0.11.0",
-    "node.bittrex.api": "^0.2.5",
+    "autobahn": "17.5.2",
+    "bufferutil": "^3.0.2",
+    "faye-websocket": "0.11.1",
+    "node.bittrex.api": "^0.5.1",
     "pusher-client": "1.1.0",
-    "utf-8-validate": "^1.2.1"
+    "utf-8-validate": "^3.0.3"
   },
   "author": "Ronaldo Barbachano",
   "license": "ISC",
