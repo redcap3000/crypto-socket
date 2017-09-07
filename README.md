@@ -4,7 +4,7 @@
 
 ***Provided as is.***
 
-Combines public crypto currency websocket API's to provide a low-resource, zero configuration ticker.
+Combines public crypto currency websocket API's to provide a low-resource, zero configuration ticker. Each exchange, except for bittrex, uses a realtime websocket.
 
 
 ### Quickstart
@@ -21,22 +21,12 @@ cryptoSocket.start();
 
 ##Supported Exchanges/Symbols
 
-|Exchange | btc | eth | ltc| dash | lsk | rdd| doge | xem | xmr | xlm | xrp | pot |zcash|etc|maid| bts|bch/bcc|
-|---------|:---:|:---:|:--:|:----:|:---:|:--:|:----:|:---:|:---:|:---:|:---:|:---:|:---:|:-:|:--:|:--:|:-----:|
-|Bittrex  | *   | *   |  * |    * |     |  * |  *   | *   | *   | *   |  *  |  *  |     |   |    |    | *	  |
-|Poloniex | *   | *   |  * |    * |     |    |  *   | *   | *   | *   |  *  |  *  |  *  | * |  * |  * | *     |
-|Bitfinex | *   | *   |  * |    * |     |    |      |     | *   |     |     |     |  *  | * |    |    | *     |
-|Cex      | *   | *   |    |      |     |    |      |     |     |     |     |     |     |   |    |    |       | 
-|Bitstamp | *   |     |    |      |     |    |      |     |     |     |  *  |     |     |   |    |    |       |
-|Gemini   | *   | *   |    |      |     |    |      |     |     |     |     |     |     |   |    |    |       |
-|GDAX	  | *	| *	  |  * |      |     |    |      |     |     |     |     |     |     |   |    |    |       |
-|Bitmex   | *   |     |    |      |     |    |      |     |     |     |     |     |     |   |    |    |       |
-|OKCoin?  | *   |     |  * |      |     |    |      |     |     |     |     |     |     |   |    |    |       |
+THIS IS REMOVED.
 
+Maybe when **npm gets their crap together** they can fix the way long tables appear.
+I, and many others, have opened many tickets but its fairly obvious they do **not have anyone working as a front end developer**. The fix is probably as simple as a few lines of CSS. The response from support was over the top, prompt, but the problem still exists. At any rate, this library
+is transitioning to support every market on supported exchanges. You can check out the 'ExchangeInfo' variable  for a detailed view of what markets are available for the exchanges that have this functionality implemented.
 
-
--- Top exchanges have at least a BTCUSD quote, ETHUSD, LTCUSD, DASHUSD etc. Documentation coming soon.... check source for more details.
--- okcoin seems to not be responding to websocket requests?
 
 ## Basic functions
 
@@ -52,6 +42,16 @@ cryptoSocket.start("bitfinex","ETHBTC")
 cryptoSocket.start("bitmex","ETHBTC")
 cryptoSocket.start("cex","ETHBTC")
 ```
+
+
+### Supported for bitfinex and bittrex
+
+Pass an array to subscribe to multiple markets
+
+```
+cryptoSocket.start("bitfinex",['LTCBTC','BTCUSD'])
+```
+These exchanges should support all markets that they have, and will be simple to add more.
 
 **Note**
 
@@ -112,9 +112,3 @@ The exchange's api does not offer the symbol via websocket or laziness. Hook it 
 ###Why are some exchanges unavailable?
 
 For the most part they do not offer a public web socket and I did not feel it nessary to reduplicate more code to create a 'faux-socket', as there are many alternatives.
-
-##Donate wallet
-Got some extra coins? Send them here.
- 
-bitcoin wallet address : **1K9R37jV71x3EN7HubbNicvKQ1gqo6xWpM**
-
