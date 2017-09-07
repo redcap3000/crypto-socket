@@ -1,6 +1,6 @@
 {
   "name": "crypto-socket",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Basic cryptocurrency ticker supporting multiple exchanges and currencies with websockets where available.",
   "main": "index.js",
   "scripts": {
