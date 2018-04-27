@@ -93,7 +93,7 @@ Other popular BTC average modules require incredible amount of bandwidth at regu
 
 This module **does not include exchange API's that do not have web sockets**. Why? Theres a billion other modules that do something similar, and perhaps this is a wake up call to any exchange that does not offer rhobust websocket support.
 
-Many developers would rather not be bothered reading through additional API documentation which, in many cases, is incomplete, hard to follow and usually lacking node.js examples. I did it for you! In node. Your welcome.
+Many developers would rather not be bothered reading through additional API documentation which, in many cases, is incomplete, hard to follow and usually lacking node.js examples. I did it for you! In node. You're welcome.
 
 ### Why Should I use websockets?
 
