@@ -33,24 +33,28 @@ exports.Exchanges = Exchanges;
 ExchangeInfo = {
     'bittrex': {
         'USD': [
-            'BTC', 'ETH', 'NEO',
-            'LTC', 'BCC', 'ETC',
-            'ZEC', 'XMR', 'DASH',
-            'XRP'
+            'ADA','BCC','BTC','BTG','DASH',
+            'ETC','ETH','LTC',
+            'NEO','NXT','OMG',
+            'TUSD','XMR','XRP','XVG','ZEC'
         ],
         'ETH': [
-            'OMG', 'NEO', 'QTUM',
-            'PAY', 'BCC', 'LTC',
-            'SNT', 'XRP', 'CVC',
-            'ADX', 'ETC', 'GNT',
-            'STRAT', 'ZEC', 'BAT',
-            'TKN', 'XMR', 'MTL',
-            'FUN'
+	           'ADA','ADT','ADX','ANT',
+            'BAT','BCC','BTCP','BNT','BTG',
+            'CFI','CRB','CVC','DASH','DGB','DMT','DNT',
+            'ENG','ETC','FTC','GNO','GNT','GUP',
+            'HMQ','LGD','LRC','LTC','LUN','MANA','MCO',
+            'NEO','NMR','OMG','PAY','POLY','POWR','PTOY',
+            'QRL','QTUM','RCN','REP','RCL','SALT','SC','SNT',
+            'SRN','STORJ','STRAT','TIX','TRST','TRX','TUSD',
+            'UKG','UP','VEE','VIB','WAVES','WAX','WINGS','XEM','XLM','ZEC','ZRX'
         ]
     },
     // bifinex calls BCC bcash?
     // not supporting chain split tokens
     // because they're BCC .... its confusing af
+    // also since i'm an american accessing bitfinex may be illegal (in their eyes)
+    // i.e. can't log in to double check every market pair. someone help please.
     'bitfinex': {
         'USD': [
             'BTC', 'LTC', 'ETH',
@@ -67,6 +71,20 @@ ExchangeInfo = {
 };
 
 // helper function that can simply echo the exchanges variable so its kinda like a ticker.
+
+
+exports.getExchangeMarkets = function(exchange,baseSymbol){
+	// only works for stuff inside of the ExchangeInfo variable
+	if(typeof ExchangeInfo[exchange] != 'undefined' && typeof ExchangeInfo[exchange][baseSymbol] != 'undefined'){
+		return ExchangeInfo[exchange][baseSymbol].map(function(m){
+			return m+baseSymbol;
+		})
+	}else{
+		console.log("Could not find provide information in ExchangeInfo variable");
+		return false;
+	}
+};
+
 exports.echoExchange = function() {
     console.log("\n\n\n\n\n\n\n\n\n\n");
     for (k in Exchanges) {
@@ -129,11 +147,10 @@ var assembleSymbols = function(exchange) {
     return supportedSymbols
 }
 exports.supportedExchanges = supportedExchanges;
-
+exports.exchangeInfo = ExchangeInfo;
 var cryptoSockets = {
 
     'bittrex': function(symbols) {
-        console.log(symbols)
         if (typeof symbols == 'undefined') {
             // default it
             symbols = ['BTCUSD']
@@ -148,7 +165,6 @@ var cryptoSockets = {
             } else {
                 var symbol = ''
                 pairs.filter(function(p) {
-                    console.log(p)
                     if (sym.endsWith(p) && symbol == '') {
                         symbol = p + (p == 'USD' ? 'T' : '') + '-' + sym.split(p)[0];
                     }
@@ -158,6 +174,7 @@ var cryptoSockets = {
             if (typeof symbol != 'undefined' && symbol != '') {
                 return symbol;
             } else {
+		console.log(symbol)
                 console.log("Could not convert bittrex symbol, market not found.")
             }
         }
@@ -413,14 +430,18 @@ var cryptoSockets = {
             {
                 "type": "subscribe",
                 "product_id": "LTC-BTC"
-            }
+            },
+	    {
+		"type": "subscribe",
+		"product_id": "BCH-USD"
+	    }
         ].filter((item) => {
             return typeof symbol == 'undefined' || norm(item.product_id) == symbol
         });
         this.makeSocket('wss://ws-feed.gdax.com/', 'gdax', function(event) {
             if (typeof event.data != "undefined") {
                 var data = JSON.parse(event.data);
-                if (data && typeof data.type != "undefined") {
+                if (data && typeof data.type != "undefined" && data.type == 'match') {
                     var tickerValue = parseFloat(data.price);
                     if (tickerValue != Exchanges.gdax[norm(data.product_id)]) {
                         Exchanges.gdax[norm(data.product_id)] = tickerValue
