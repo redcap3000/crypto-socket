@@ -4,12 +4,20 @@
 
 *** Provided as is. ***
 
-Combines public crypto currency websocket API's to provide a low-resource, zero configuration ticker. Each exchange, except for bittrex, uses a realtime websocket.
+Combines public crypto currency websocket APIs to provide a low-resource, zero-configuration ticker. Each exchange, except for Bittrex, uses a real-time websocket.
 
 
 ### Supported exchanges
 
-bittrex,bitstamp,poloniex,gdax,gemini,cex,bitfinex,okcoin,bitmex
+ - Bittrex
+ - Bitstamp
+ - Poloniex
+ - GDAX
+ - Gemini
+ - CEX
+ - Bitfinex
+ - OKCoin
+ - Bitmex
 
 ### Quickstart
 
@@ -49,12 +57,12 @@ These exchanges should support all markets that they have, and will be simple to
 
 **Note**
 
-As of now **Poloniex** exchange only has one open socket that sends back all data. The above syntax is not recommeneded unless you are only following one symbol; as it will open up multiple sockets that return all data, and filter out your selections.
+As of now, **Poloniex** exchange only has one open socket that sends back all data. The above syntax is not recommeneded unless you are only following one symbol, as it will open up multiple sockets that returns all data, and filter out your selections.
 __________
 
 ### echoExchange()
 
-A simple printout of all open ticker quotes.
+A simple printout of all opened ticker quotes.
 
 
 
@@ -83,15 +91,15 @@ console.log(cryptoSocket.Exchanges['bitfinex'])
 
 ## FAQ
 
-** Does this store data? **
+### Does this store data?
 
-Nope. Ticker values (in most cases last sale price) is stored in memory.
+Nope. Ticker values (in most cases last sale price) are stored in memory.
 
-*** Why? ***
+### Why?
 
 Other popular BTC average modules require incredible amount of bandwidth at regular intervals which can make deployment difficult in many situations. Websockets are obviously the way to go for real time data, as constantly querying many exchanges can be taxing.
 
-This module **does not include exchange API's that do not have web sockets**. Why? Theres a billion other modules that do something similar, and perhaps this is a wake up call to any exchange that does not offer rhobust websocket support.
+This module **does not include exchange API's that do not have web sockets**. Why? There's a billion other modules that do something similar, and perhaps this is a wake up call to any exchange that does not offer robust websocket support.
 
 Many developers would rather not be bothered reading through additional API documentation which, in many cases, is incomplete, hard to follow and usually lacking node.js examples. I did it for you! In node. You're welcome.
 
