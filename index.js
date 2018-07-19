@@ -548,7 +548,7 @@ var cryptoSockets = {
 
     },
     'poloniex': function(symbol) {
-        var wsuri = "wss://api.poloniex.com";
+        var wsuri = "wss://api2.poloniex.com";
         Sockets.poloniex = new autobahn.Connection({
             url: wsuri,
             realm: "realm1"
