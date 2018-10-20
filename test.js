@@ -1,4 +1,4 @@
-cryptoSocket = require("crypto-socket");
+cryptoSocket = require("./index.js");
 
 cryptoSocket.start();
 

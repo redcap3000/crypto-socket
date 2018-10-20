@@ -17,12 +17,10 @@
     "bitcoin",
     "ethereum",
     "litecoin",
-    "lisk",
     "finance",
     "ticker"
   ],
   "dependencies": {
-    "autobahn": "17.5.2",
     "bufferutil": "^3.0.2",
     "faye-websocket": "0.11.1",
     "node.bittrex.api": "^0.5.1",

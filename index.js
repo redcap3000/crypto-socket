@@ -11,270 +11,157 @@
 
 var WebSocket = require('faye-websocket'),
     Pusher = require('pusher-client'),
-    autobahn = require('autobahn'),
-    bittrex = require('node.bittrex.api');
+    bittrex = require('node.bittrex.api')
+;
+     
+var Exchanges = {}, Sockets = {},
 
-var Exchanges = {},
-    Sockets = {},
-
-    BfxChannelIds = {};
+BfxChannelIds = {};
 
 exports.Exchanges = Exchanges;
-/* Eventually get this information from some kind of endpoint
-    that can be requested on demand and potentially stored
-    ... somewhere ?
-    Also to note, theres no btcSym because (for now)
-    can just convert it as normal. But some symbol names
-    are different across exchanges (BCC/BCH)
-    Once this is replicated across the other exchanges
-    only this variable will need to be changed to support any market.
-*/
-
-ExchangeInfo = {
-    'bittrex': {
-        'USD': [
-            'ADA','BCC','BTC','BTG','DASH',
-            'ETC','ETH','LTC',
-            'NEO','NXT','OMG',
-            'TUSD','XMR','XRP','XVG','ZEC'
-        ],
-        'ETH': [
-	           'ADA','ADT','ADX','ANT',
-            'BAT','BCC','BTCP','BNT','BTG',
-            'CFI','CRB','CVC','DASH','DGB','DMT','DNT',
-            'ENG','ETC','FTC','GNO','GNT','GUP',
-            'HMQ','LGD','LRC','LTC','LUN','MANA','MCO',
-            'NEO','NMR','OMG','PAY','POLY','POWR','PTOY',
-            'QRL','QTUM','RCN','REP','RCL','SALT','SC','SNT',
-            'SRN','STORJ','STRAT','TIX','TRST','TRX','TUSD',
-            'UKG','UP','VEE','VIB','WAVES','WAX','WINGS','XEM','XLM','ZEC','ZRX'
-        ]
-    },
-    // bifinex calls BCC bcash?
-    // not supporting chain split tokens
-    // because they're BCC .... its confusing af
-    // also since i'm an american accessing bitfinex may be illegal (in their eyes)
-    // i.e. can't log in to double check every market pair. someone help please.
-    'bitfinex': {
-        'USD': [
-            'BTC', 'LTC', 'ETH',
-            'ETC', 'RTT', 'ZEC',
-            'XMR', 'DASH', 'IOTA',
-            'EOS', 'SAN', 'OMG',
-            'BCC'
-        ],
-        'ETH': [
-            'IOTA', 'EOS', 'SAN', 'OMG',
-            'BCC'
-        ]
-    }
-};
 
 // helper function that can simply echo the exchanges variable so its kinda like a ticker.
-
-
-exports.getExchangeMarkets = function(exchange,baseSymbol){
-	// only works for stuff inside of the ExchangeInfo variable
-	if(typeof ExchangeInfo[exchange] != 'undefined' && typeof ExchangeInfo[exchange][baseSymbol] != 'undefined'){
-		return ExchangeInfo[exchange][baseSymbol].map(function(m){
-			return m+baseSymbol;
-		})
-	}else{
-		console.log("Could not find provide information in ExchangeInfo variable");
-		return false;
-	}
-};
-
 exports.echoExchange = function() {
     console.log("\n\n\n\n\n\n\n\n\n\n");
-    for (k in Exchanges) {
-        console.log('\t' + k);
+    for(k in Exchanges){
+        console.log('\t'+k);
         var r = '';
-        for (s in Exchanges[k]) {
+        for(s in Exchanges[k]){
             r += s + '\t' + Exchanges[k][s] + '\t';
         }
         console.log(r);
     }
     //console.log(Exchanges);
 };
-exports.start = function(exchange, symbols) {
-    if (typeof exchange == "undefined") {
+exports.start = function(exchange,symbols) {    
+    if(typeof exchange == "undefined"){
         cryptoSockets.start();
-    } else {
+    }else{
         // check if its supported... ?
-        cryptoSockets.start(exchange, symbols);
+        cryptoSockets.start(exchange,symbols);
     }
 };
-
-
 // bread and butter for 2/3 of exchanges. url is the websocket endpoint, title refers to the exchange (single word),onMessage
 // is a function that runs when the socket receives a message, send is an object that is sent to subscribe where applicable
 var supportedExchanges = [
+    'poloniex',
     'bittrex',
     'bitfinex',
     'bitmex',
     'bitstamp',
     'cex',
     'gdax',
-    'gemini',
-    'okcoin',
-    'poloniex'
+    'gemini'
 ];
-var getExchangeSymbols = function(exchange) {
-    return ExchangeInfo[exchange]
-}
-var assembleSymbols = function(exchange) {
-    supportedSymbols = []
-    for (var key in ExchangeInfo[exchange]) {
-        ExchangeInfo[exchange][key].filter(function(main) {
-            var symbol = ''
-            var sub = ''
-            if (exchange == 'bitfinex' && key == 'BCC') {
-                sub = BCC
-            } else {
-                sub = key
-            }
 
-            if (main != "BTC") {
-                symbol = main + sub
-            } else {
-                symbol = sub + main
-            }
-            supportedSymbols.push(symbol)
-        })
-
-    }
-    return supportedSymbols
-}
 exports.supportedExchanges = supportedExchanges;
-exports.exchangeInfo = ExchangeInfo;
+
 var cryptoSockets = {
-
-    'bittrex': function(symbols) {
-        if (typeof symbols == 'undefined') {
-            // default it
-            symbols = ['BTCUSD']
-        }
-        var activeBittrexSymbols = assembleSymbols('bittrex')
-
-        function convertSymbol(sym) {
-            // check for used
-            var pairs = ['BTC', 'USD', 'ETH'];
-            if (sym == 'BTCUSD') {
-                return 'USDT-BTC';
-            } else {
-                var symbol = ''
-                pairs.filter(function(p) {
-                    if (sym.endsWith(p) && symbol == '') {
-                        symbol = p + (p == 'USD' ? 'T' : '') + '-' + sym.split(p)[0];
-                    }
-                })
-
-            }
-            if (typeof symbol != 'undefined' && symbol != '') {
-                return symbol;
-            } else {
-		console.log(symbol)
-                console.log("Could not convert bittrex symbol, market not found.")
-            }
-        }
-        if (typeof Exchanges['bittrex'] == "undefined") {
+    'bittrex' : function(){
+        console.log("BITTREX START")
+        if(typeof Exchanges['bittrex'] == "undefined"){
             Exchanges['bittrex'] = {};
         }
-        if (typeof symbols != 'undefined') {
-            // check exchanges to see that quote is not 
-            // already reporting
-            // this mostly handles appropriate referen
-            var listening = [];
-            symbols.filter(function(sym) {
-                if (parseInt(activeBittrexSymbols.indexOf(sym)) > -1) {
-                    //    console.log('already listening ' + sym);
-                    activeBittrexSymbols.push(sym)
-                }
-                var relation = convertSymbol(sym);
-                //console.log( 'listen for ' + relation);
-                // not a web socket poll/diff :(
-                bittrex.getticker({ market: relation, stream: true }, function(response) {
-                    var responseObj = response.result
-                    // cant believe this crap. the only way to avoid 'null' errors
-                    // if market was invalid etc.
-                    if (typeof responseObj != 'undefined' && responseObj != null && responseObj && typeof responseObj.Last == 'number') {
-                        Exchanges.bittrex[sym] = parseFloat(responseObj.Last);
 
+        var bittrexMarketFilter = 
+            [   
+                //'BTC-ETH',
+                //'USDT-ETH',
+                //'BTC-RDD',
+                //'BTC-XRP',
+                //'BTC-POT',
+                'BTC-LTC',
+                //'BTC-XEM',
+                //'BTC-DASH',
+                //'BTC-BTS',
+                //'BTC-DOGE',
+                //'BTC-XMR',
+                //'BTC-XLM',
+                'USDT-BTC',
+                'USDT-LTC'
+                //'BTC-NEO',
+                //'ETH-NEO'
+            ];
+        var bittrexMarketFilterRelation = 
+            [   
+                //'ETHBTC',
+                //'ETHUSD',
+                //"RDDBTC",
+                //'XRPBTC',
+                //"POTBTC",
+                'LTCBTC',
+                //'XEMBTC',
+                //'DASHBTC',
+                //'BTSBTC',
+                //'DOGEBTC',
+                //'XMRBTC',
+                //"XLMBTC",
+                "BTCUSD",
+                'LTCUSD'
+                //'BTCNEO',
+                //'ETHNEO'
+            ];
+
+        bittrex.options({ 'stream': true });
+
+        bittrexMarketFilter.filter(function(o,i){
+            bittrex.getticker( {market :o},function( response ) {
+                if(typeof response != 'undefined' && typeof response.Last != 'undefined'){
+                    if(typeof bittrexMarketFilterRelation[i] != "undefined"){
+                    // for the record :
+                        var relation = bittrexMarketFilterRelation[i]
+                        if(typeof Exchanges.bittrex[relation] == "undefined"){
+                            Exchanges.bittrex[relation] = true
+                        }
+
+                        if(typeof  response.Last == "undefined"){
+                            return false
+                        }
+
+                        if (Exchanges.bittrex[relation] !=  response.Last) {
+                            Exchanges.bittrex[relation] =  response['Last'];
+                        }
+                    }else{
+                        console.log("relation not found " + o + ' : ' + i)
                     }
-                    //}
-                });
-                //}
-            });
-            // unlisten to variables that aren't present?
-            // to do add all open 'getTicker' sockets to another variable so they can be closed
-            /*
-            for(var key in Exchanges['bittrex']){
-                if(parseInt(listening.indexOf(key)) == -1){
-                    // unlisten to this quote somehow
                 }
-            }*/
-            return true;
-        }
+            });    
+        });
     },
-    'bitfinex': function(symbols) {
-        console.log("bitfinex start")
-        // walk through exchange info to build list of supported symbols
-        var activeSymbols = []
-        var supportedSymbols = ['BTCUSD']
-        for (var key in ExchangeInfo.bitfinex) {
-            ExchangeInfo.bitfinex[key].filter(function(main) {
-                var symbol = ''
-                var sub = ''
-                if (key == 'BCC') {
-                    sub = BCC
-                } else {
-                    sub = key
-                }
-                if (main != "BTC") {
-                    symbol = main + sub
-                } else {
-                    symbol = sub + main
-                }
-                supportedSymbols.push(symbol)
-            })
-          
-        }
-        if (typeof symbols == 'undefined') {
-            activeSymbols.push({
-                "event": "subscribe",
-                "channel": "ticker",
-                "pair": 'BTCUSD'
-            })
-        } else {
-            if (symbols == 'string') {
-                if (parseInt(supportedSymbols.indexOf(symbols)) > -1) {
-                    activeSymbols.push({
-                        "event": "subscribe",
-                        "channel": "ticker",
-                        "pair": symbols
-                    })
-                }
-            } else if (symbols.length > 0) {
-                symbols.filter(function(s) {
-                    console.log(s)
-                        if (parseInt(supportedSymbols.indexOf(s)) > -1) {
-                            activeSymbols.push({
-                                "event": "subscribe",
-                                "channel": "ticker",
-                                "pair": s
-                            })
-                        }           
-                    }
-                )
+    'bitfinex': function(symbol) {
+
+         var supportedSymbols = {};
+        [
+            "BTCUSD",
+            "LTCUSD",
+            "LTCBTC",
+            //"ETHUSD",
+            //"ETHBTC",
+            //"XMRBTC",
+            //"DASHBTC",
+            //"ZECBTC",
+            //"BCHBTC",
+            //"BCHUSD"
+
+        ].filter( function(o){
+            supportedSymbols[o] = {
+                "event" : "subscribe",
+                "channel" : "ticker",
+                "pair" : o
+            };
+        });
+       
+        if (typeof symbol == "undefined") {
+            symbol = [];
+            for (key in supportedSymbols) {
+                symbol.push(supportedSymbols[key]);
             }
+        } else {
+            symbol = [supportedSymbols[symbol]];
+
         }
-        // probably had to make this self because of the filter function
-        var fmakeSocket = this.makeSocket
-        activeSymbols.filter(function(sym){
-        // should add symbol name to 'title' for 'close' reference
-        // but causes issue with 'tickerCode on line 285'
-        fmakeSocket('wss://api2.bitfinex.com:3000/ws', 'bitfinex', function(event) {
+
+        this.makeSocket('wss://api2.bitfinex.com:3000/ws', 'bitfinex', function(event) {
             if (typeof event.data != "undefined") {
                 var data = JSON.parse(event.data);
                 if (typeof data.event != "undefined" && data.event == "subscribed" || data.event == "info") {
@@ -304,8 +191,8 @@ var cryptoSockets = {
                     }
                 }
             }
-        }, sym);
-        })
+        }, symbol);
+
         return true;
     },
     'bitmex': function(symbol) {
@@ -313,32 +200,36 @@ var cryptoSockets = {
         // to support more bitmex symbols check out their rest API and implement symbols you see from
         // the return of their endpoints
         var symbols = {
-            ".ETHXBT": "ETHBTC",
-            "XBTUSD": 'BTCUSD',
-            ".LTCXBT": "LTCBTC"
+          //"ETHUSD": "ETHUSD",
+          "XBTUSD" : "BTCUSD",
+          //"BCHZ18" : "BCHBTC",
+          //"EOSZ18" : "EOSBTC",
+          //"TRXZ18" : "TRXBTC",
+          //"XRPZ18": 'XRPBTC',
+          "LTCZ18": "LTCBTC"
         }
         var query = Object.keys(symbols)
-            .filter((key) => {
-                if (symbol) {
-                    return symbols[key] == symbol
-                } else {
-                    return true
-                }
-            })
-            .map((symbol) => { return 'trade:' + symbol })
-            .join(',')
+          .filter((key) => { 
+            if (symbol) { 
+              return symbols[key] == symbol
+            } else { 
+              return true 
+            }
+          })
+          .map((symbol) => { return 'trade:' + symbol })
+          .join(',')
         this.makeSocket('wss://www.bitmex.com/realtime?subscribe=' + query, 'bitmex', function(event) {
             if (typeof event.data != "undefined") {
                 var data = JSON.parse(event.data);
                 if (data && data.data) {
                     data = data.data[0];
-                    if (typeof data == "undefined" || typeof data.symbol == "undefined") {
+                    if(typeof data == "undefined" || typeof data.symbol == "undefined"){
                         // some responses are blank or notification of sub.. when that happens this crashes... 
                         return false;
                     }
                     if (symbols[data.symbol]) {
-                        Exchanges.bitmex[symbols[data.symbol]] = parseFloat(data.price)
-                    }
+                      Exchanges.bitmex[symbols[data.symbol]] = parseFloat(data.price)
+                    } 
                 } else {
                     //console.log(event);
                     console.log(JSON.parse(event.data));
@@ -362,8 +253,8 @@ var cryptoSockets = {
                 return false;
             }
             console.log("starting bistamp socket");
-            if (typeof symbol == "undefined") {
-                // dont forget to filter to only data u want.
+            if(typeof symbol == "undefined"){
+            // dont forget to filter to only data u want.
                 BitstampSocket = pusher.subscribe('live_trades');
                 var i = 0;
                 BitstampSocket.bind('trade', function(data) {
@@ -372,6 +263,7 @@ var cryptoSockets = {
                         Exchanges.bitstamp.BTCUSD = parseFloat(data['price']);
                     }
                 });
+                /*
                 BitstampSocket2 = pusher.subscribe('live_trades_xrpbtc');
                 var i = 0;
                 BitstampSocket2.bind('trade', function(data) {
@@ -380,10 +272,21 @@ var cryptoSockets = {
                         Exchanges.bitstamp.XRPBTC = parseFloat(data['price']);
                     }
                 });
-            } else {
+                
+                 BitstampSocket3 = pusher.subscribe('live_trades_ltcbtc');
+                var i = 0;
+                BitstampSocket3.bind('trade', function(data) {
+                    console.log(data)
+                    var price = parseFloat(data['price']);
+                    if (Exchanges.bitstamp.LTCBTC != price) {
+                        Exchanges.bitstamp.LTCBTC = parseFloat(data['price']);
+                    }
+                });
+                */
+            }else{
                 // check supported symbol pairs
                 var symbolConversion = {
-                    'XRPBTC': 'live_trades_xrpbtc'
+                    'XRPBTC' : 'live_trades_xrpbtc'
                 }
             }
             return true;
@@ -399,9 +302,20 @@ var cryptoSockets = {
                 if (data && typeof data.data != "undefined") {
                     data = data.data;
                     var tickerValue = parseFloat(data.price);
-                    if ((data.symbol1 == 'BTC' && data.symbol2 == 'USD') || (data.symbol1 == 'ETH' && data.symbol2 == 'BTC')) {
+                    var symbol = data.symbol1 + data.symbol2
+                    // REWRITE THIS
+                    if (
+                            (data.symbol1 == 'BTC' && data.symbol2 == 'USD') || 
+                            
+                           // (data.symbol1 == 'ETH' && data.symbol2 == 'BTC') || 
+                           // (data.symbol1 == 'ETH' && data.symbol2 == 'USD') ||
+                            
+                            (data.symbol1 == 'LTC' && data.symbol2 == 'USD') ||
+                            (data.symbol1 == 'LTC' && data.symbol2 == 'BTC') 
+
+                            ) {
                         var tickerCode = data.symbol1 + data.symbol2;
-                        if (typeof symbol == "string" && tickerCode != symbol) {
+                        if(typeof symbol == "string" && tickerCode != symbol){
                             return false;
                         }
                         if (tickerValue != Exchanges.cex[tickerCode]) {
@@ -419,47 +333,44 @@ var cryptoSockets = {
         return true;
     },
     'gdax': function(symbol) {
-        var norm = (symbol) => { return symbol.replace('-', '') }
-        var query = [{
-                "type": "subscribe",
-                "product_id": "BTC-USD"
-            }, {
-                "type": "subscribe",
-                "product_id": "ETH-BTC"
-            },
-            {
-                "type": "subscribe",
-                "product_id": "LTC-BTC"
-            },
-	    {
-		"type": "subscribe",
-		"product_id": "BCH-USD"
-	    }
-        ].filter((item) => {
-            return typeof symbol == 'undefined' || norm(item.product_id) == symbol
-        });
+        var norm = (symbol) => { return symbol.replace('-', '') } 
+        var query =[{
+            "type": "subscribe",
+            "product_id": "BTC-USD"
+        }, 
+        //{
+        //    "type": "subscribe",
+        //    "product_id": "ETH-BTC"
+        //},
+        {
+            "type" : "subscribe",
+            "product_id" : "LTC-BTC"
+        }].filter((item) => {
+          return typeof symbol == 'undefined' || norm(item.product_id) == symbol 
+        });      
         this.makeSocket('wss://ws-feed.gdax.com/', 'gdax', function(event) {
             if (typeof event.data != "undefined") {
                 var data = JSON.parse(event.data);
-                if (data && typeof data.type != "undefined" && data.type == 'match') {
-                    var tickerValue = parseFloat(data.price);
-                    if (tickerValue != Exchanges.gdax[norm(data.product_id)]) {
-                        Exchanges.gdax[norm(data.product_id)] = tickerValue
+                if (data && typeof data.type != "undefined") {
+                    var tickerValue = parseFloat(data.price);                    
+                    if (tickerValue != Exchanges.gdax[norm(data.product_id)] )  {
+                      Exchanges.gdax[norm(data.product_id)]  = tickerValue 
                     }
                 }
             }
         }, query)
     },
     'gemini': function(symbol) {
-        if (typeof symbol != "undefined" && symbol == 'ETHBTC') {;
-        } else {
+        if(typeof symbol != "undefined" && symbol == 'ETHBTC'){
+            ;
+        }else{
             this.makeSocket('wss://api.gemini.com/v1/marketdata/btcusd', 'gemini', function(event) {
                 if (typeof event.data != "undefined") {
                     var data = JSON.parse(event.data);
                     if (data && typeof data.events != "undefined") {
                         data = data.events[0];
                         if (data.type == "trade") {
-                            if (typeof Exchanges.gemini == "undefined") {
+                            if(typeof Exchanges.gemini == "undefined"){
                                 Exchanges.gemini = {};
                             }
                             var tickerValue = parseFloat(data.price);
@@ -470,6 +381,7 @@ var cryptoSockets = {
                 }
             });
         }
+        /*
         this.makeSocket('wss://api.gemini.com/v1/marketdata/ethbtc', 'gemini2', function(event) {
             if (typeof event.data != "undefined") {
                 var data = JSON.parse(event.data);
@@ -477,10 +389,27 @@ var cryptoSockets = {
                     data = data.events[0];
                     if (data.type == "trade") {
                         var tickerValue = parseFloat(data.price);
-                        if (typeof Exchanges.gemini == "undefined") {
+                        if(typeof Exchanges.gemini == "undefined"){
                             Exchanges.gemini = {};
                         }
                         Exchanges.gemini["ETHBTC"] = tickerValue;
+
+                    }
+                }
+            }
+        });
+        */
+        this.makeSocket('wss://api.gemini.com/v1/marketdata/ltcusd', 'gemini2', function(event) {
+            if (typeof event.data != "undefined") {
+                var data = JSON.parse(event.data);
+                if (data && typeof data.events != "undefined") {
+                    data = data.events[0];
+                    if (data.type == "trade") {
+                        var tickerValue = parseFloat(data.price);
+                        if(typeof Exchanges.gemini == "undefined"){
+                            Exchanges.gemini = {};
+                        }
+                        Exchanges.gemini["LTCUSD"] = tickerValue;
 
                     }
                 }
@@ -490,26 +419,27 @@ var cryptoSockets = {
     },
     'okcoin': function(symbol) {
         var query = [{
-                "event": "addChannel",
-                "channel": "ok_btcusd_ticker",
-                "pair": "BTCUSD"
-                //"prec" : "P0"
-            }, {
-                "event": "addChannel",
-                "channel": "ok_ltcusd_ticker",
-                "pair": "LTCUSD"
-            },
-            {
-                "event": "addChannel",
-                "channel": "ok_ethusd_ticker",
-                "pair": "ETHUSD"
-                //"prec" : "P0"
-            }
-        ];
+            "event": "addChannel",
+            "channel": "ok_btcusd_ticker",
+            "pair": "BTCUSD"
+            //"prec" : "P0"
+        }, {
+            "event": "addChannel",
+            "channel": "ok_ltcusd_ticker",
+            "pair": "LTCUSD"
+        },
+        /*
+        {
+            "event": "addChannel",
+            "channel": "ok_ethusd_ticker",
+            "pair": "ETHUSD"
+            //"prec" : "P0"
+        }
+        */];
 
-        if (typeof symbol == "string" && symbol == "LTCUSD") {
+        if(typeof symbol == "string" && symbol == "LTCUSD"){    
             query.shift();
-        } else if (typeof symbol == "string" && symbol == "BTCUSD") {
+        }else if(typeof symbol == "string" && symbol == "BTCUSD"){
             query.pop();
         }
         console.log("Start okcSocket");
@@ -547,63 +477,202 @@ var cryptoSockets = {
         return true;
 
     },
+    
     'poloniex': function(symbol) {
-        var wsuri = "wss://api.poloniex.com";
-        Sockets.poloniex = new autobahn.Connection({
-            url: wsuri,
-            realm: "realm1"
-        });
+        var wsuri = "wss://api2.poloniex.com";
+        //Sockets.poloniex = new autobahn.Connection({
+       //     url: wsuri,
+        //    realm: "realm1"
+        //});
+        var query = {
+          "command": "subscribe",
+          "channel": 1002
+        }
         if (typeof Exchanges.poloniex == "undefined") {
             Exchanges.poloniex = {};
         }
-        try {
-            Sockets.poloniex.onopen = function(session) {
-                session.subscribe('ticker', function(args, kwargs) {
-                    var codeConversion = {
-                        "BTC_ETH": "ETHBTC",
-                        "USDT_BTC": "BTCUSD",
-                        "USDT_LTC": "LTCUSD",
-                        "USDT_XRP": "XRPUSD",
-                        "USDT_DASH": "DASHUSD",
-                        'USDT_XMR': "XMRUSD",
-                        'USDT_ZEC': "ZECUSD",
-                        "USDT_NXT": "NXTUSD",
-                        "BTC_LTC": "LTCBTC",
-                        "BTC_DASH": "DASHBTC",
-                        "USDT_ETH": "ETHUSD",
-                        "BTC_POT": "POTBTC",
-                        "BTC_XMR": "XMRBTC",
-                        "BTC_DOGE": "DOGEBTC",
-                        "BTC_ZEC": "ZECBTC",
-                        "BTC_XLM": "XLMBTC",
-                        "BTC_ETC": "ETCBTC",
-                        "BTC_MAID": "MAIDBTC",
-                        "BTC_XEM": "XEMBTC",
-                        "BTC_BTS": "BTSBTC",
-                        "BTC_BCH": "BCHBTC",
-                        "USDT_BCH": "BCHUSD",
-                        "BTC_XRP": "XRPBTC"
-                    }
-                    var tickerCode = (typeof codeConversion[args[0]] != "undefined" ? codeConversion[args[0]] : false);
-
-                    if ((tickerCode != symbol && typeof symbol != "undefined") || !tickerCode) {
-                        return false;
-                    }
-                    tickerValue = parseFloat(args[1]);
-
-                    if (Exchanges.poloniex[tickerCode] != tickerValue) {
-                        Exchanges.poloniex[tickerCode] = tickerValue;
-                    }
-                });
-            };
-        } catch (error) {
-            console.log(error);
+        // currency pairs (WHY IS THIS NOT AN ENDPOINT!??!?!?!?)
+        var pairIds={
+                    "7" : "BTC_BCN",
+                    "14" : "BTC_BTS",
+                    "15" : "BTC_BURST",
+                    "20" : "BTC_CLAM",
+                    "25" : "BTC_DGB",
+                    "27"   : "BTC_DOGE",
+                    "24"   : "BTC_DASH",
+                    "38"   : "BTC_GAME",
+                    "43"   : "BTC_HUC",
+                    "50"   : "BTC_LTC",
+                    "51"   : "BTC_MAID",
+                    "58"   : "BTC_OMNI",
+                    "61"   : "BTC_NAV",
+                    "64"   : "BTC_NMC",
+                    "69"   : "BTC_NXT",
+                    "75"   : "BTC_PPC",
+                    "89"   : "BTC_STR",
+                    "92"   : "BTC_SYS",
+                    "97"   : "BTC_VIA",
+                    "100"  : "BTC_VTC",
+                    "108"  : "BTC_XCP",
+                    "114" : "BTC_XMR",
+                    "116" : "BTC_XPM",
+                    "117" : "BTC_XRP",
+                    "112" : "BTC_XEM",
+                    "148" : "BTC_ETH",
+                    "150" : "BTC_SC",
+                    "155"  : "BTC_FCT",
+                    "162"  : "BTC_DCR",
+                    "163"  : "BTC_LSK",
+                    "167"  : "BTC_LBC",
+                    "168"  : "BTC_STEEM",
+                    "170"  : "BTC_SBD",
+                    "171"  : "BTC_ETC",
+                    "174"  : "BTC_REP",
+                    "177"  : "BTC_ARDR",
+                    "178" : "BTC_ZEC",
+                    "182" : "BTC_STRAT",
+                    "184" : "BTC_PASC",
+                    "185" : "BTC_GNT",
+                    "189" : "BTC_BCH",
+                    "192" : "BTC_ZRX",
+                    "194" : "BTC_CVC",
+                    "196" : "BTC_OMG",
+                    "198" : "BTC_GAS",
+                    "200" : "BTC_STORJ",
+                    "201" : "BTC_EOS",
+                    "204" : "BTC_SNT",
+                    "207" : "BTC_KNC",
+                    "210" : "BTC_BAT",
+                    "213" : "BTC_LOOM",
+                    "221" : "BTC_QTUM",
+                    "232" : "BTC_BNT",
+                    "229" : "BTC_MANA",
+                    "121" : "USDT_BTC",
+                    "216" : "USDT_DOGE",
+                    "122" : "USDT_DASH",
+                    "123" : "USDT_LTC",
+                    "124" : "USDT_NXT",
+                    "125" : "USDT_STR",
+                    "126" : "USDT_XMR",
+                    "127" : "USDT_XRP",
+                    "149" : "USDT_ETH",
+                    "219" : "USDT_SC",
+                    "218" : "USDT_LSK",
+                    "173" : "USDT_ETC",
+                    "175" : "USDT_REP",
+                    "180" : "USDT_ZEC",
+                    "217" : "USDT_GNT",
+                    "191" : "USDT_BCH",
+                    "220" : "USDT_ZRX",
+                    "203" : "USDT_EOS",
+                    "206" : "USDT_SNT",
+                    "209" : "USDT_KNC",
+                    "212" : "USDT_BAT",
+                    "215" : "USDT_LOOM",
+                    "223" : "USDT_QTUM",
+                    "234" : "USDT_BNT",
+                    "231" : "USDT_MANA",
+                    "129" : "XMR_BCN",
+                    "132" : "XMR_DASH",
+                    "137" : "XMR_LTC",
+                    "138" : "XMR_MAID",
+                    "140" : "XMR_NXT",
+                    "181" : "XMR_ZEC",
+                    "166" : "ETH_LSK",
+                    "169" : "ETH_STEEM",
+                    "172" : "ETH_ETC",
+                    "176" : "ETH_REP",
+                    "179" : "ETH_ZEC",
+                    "186" : "ETH_GNT",
+                    "190" : "ETH_BCH",
+                    "193" : "ETH_ZRX",
+                    "195" : "ETH_CVC",
+                    "197" : "ETH_OMG",
+                    "199" : "ETH_GAS",
+                    "202" : "ETH_EOS",
+                    "205" : "ETH_SNT",
+                    "208" : "ETH_KNC",
+                    "211" : "ETH_BAT",
+                    "214" : "ETH_LOOM",
+                    "222" : "ETH_QTUM",
+                    "233" : "ETH_BNT",
+                    "230" : "ETH_MANA",
+                    "224" : "USDC_BTC",
+                    "226" : "USDC_USDT",
+                    "225" : "USDC_ETH"
         }
+        this.makeSocket('wss://api2.poloniex.com','poloniex', function(event){
+            if(typeof event != 'undefined' && typeof event.data != 'undefined'){
+                try{
+                    var args = JSON.parse(event.data)
+                        if(typeof args == 'object' && typeof args[2] != 'undefined' && args[2].length > 0){
+                            // EX : [1002,null,[201,"0.00083453","0.00083489","0.00083057","0.01221405","3.18906644","3842.61804400",0,"0.00083500","0.00082431"]]
+                            var data = args[2]
+                            var currencyId = data[0].toString()
+                            if(typeof pairIds[currencyId] != 'undefined'){
+
+                                var currencyPair = pairIds[currencyId]
+                                var codeConversion = {
+                                    "BTC_ETH"  : "ETHBTC",
+                                    "USDT_BTC" : "BTCUSD",
+                                    "USDT_LTC" : "LTCUSD",
+                                     "USDT_ETH" : "LTCETH",
+                                    "USDT_XRP" : "XRPUSD",
+                                    "USDT_DASH" : "DASHUSD",
+                                    'USDT_XMR' : "XMRUSD",
+                                    'USDT_ZEC' : "ZECUSD",
+                                    //"USDT_STR" : "STRUSD",
+                                    //'USDT_REP' : "REPUSD",
+                                    "USDT_NXT" : "NXTUSD",
+                                    "BTC_LTC" : "LTCBTC",
+                                    "BTC_DASH" : "DASHBTC",
+                                    //"USDT_DASH" : "DASHUSD",
+                                    //"BTC_LSK" : "LSKBTC",
+                                    "USDT_ETH" : "ETHUSD",
+                                    "BTC_POT" : "POTBTC",
+                                    "BTC_XMR" : "XMRBTC",
+                                    "BTC_DOGE" : "DOGEBTC",
+                                    "BTC_ZEC" : "ZECBTC",
+                                    "BTC_XLM" : "XLMBTC",
+                                    "BTC_ETC" : "ETCBTC",
+                                    //"BTC_FTC" : "FTCBTC",
+                                    "BTC_MAID" : "MAIDBTC",
+                                    "BTC_XEM" : "XEMBTC",
+                                    //"BTC_PASC" : "PASCBTC",
+                                    "BTC_BTS" : "BTSBTC",
+                                    "BTC_BCH" : "BCHBTC",
+                                    "USDT_BCH" : "BCHUSD",
+                                    "BTC_XRP" : "XRPBTC"
+                                }
+                                var tickerCode = (typeof codeConversion[currencyPair] != "undefined" ? codeConversion[currencyPair] : false);
+                                /*
+                                if((tickerCode != symbol && typeof symbol != "undefined") || !tickerCode){
+                                    return false;
+                                }
+                                */
+                                if(tickerCode){
+                                    tickerValue = parseFloat(data[1]);
+
+                                    if (Exchanges.poloniex[tickerCode] != tickerValue) {
+                                        Exchanges.poloniex[tickerCode] = tickerValue;
+                                    }
+                                }
+                            }else{
+                                console.log("*** Poloneix currencyPair id: \t" + data +" not found")
+                            }
+                    }
+
+                }catch(e){
+                    ;
+                }
+            }
+        },query)
+
 
         Sockets.poloniex.onclose = function() {
             console.log("Polosocket connection closed");
         }
-        Sockets.poloniex.open();
+       // Sockets.poloniex.open();
     },
     makeSocket: function(url, title, onMessage, send) {
         if (typeof url != "string" || typeof title != "string") {
@@ -659,7 +728,7 @@ var cryptoSockets = {
         }
         return true;
     },
-    'start': function(exchange, symbols) {
+    'start': function(exchange,symbols) {
         if (typeof exchange == "undefined") {
             var self = this;
 
@@ -667,10 +736,10 @@ var cryptoSockets = {
                 console.log(e);
                 self[e](symbols);
             });
-        } else {
-            try {
+        }else{
+            try{
                 this[exchange](symbols);
-            } catch (error) {
+            }catch(error){
                 console.log(exchange);
                 console.log(error);
             }
